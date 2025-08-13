@@ -1,0 +1,57 @@
+--1. Find company name who have placed more than 10 orders (use subquery in WHERE)
+SELECT CompanyName FROM Customers
+WHERE CustomerID IN (SELECT CustomerID FROM Orders
+                        GROUP BY CustomerID
+                        HAVING COUNT(OrderID) > 10);
+
+--2. Find the product that have the highest unit price (use scalar subquery)
+SELECT ProductName,UnitPrice
+FROM Products
+WHERE UnitPrice = (SELECT MAX(UnitPrice) FROM Products); 
+
+--3. List orders that include at least one product with UnitPrice > 100 (use EXISTS)
+SELECT OrderID
+FROM Orders o
+WHERE EXISTS (SELECT *
+                FROM [Order Details] od
+                WHERE od.OrderID = o.OrderID AND od.UnitPrice > 100);
+
+--4. Show customers whose total order amount is above the average order amount (correlated subquery)
+SELECT CompanyName
+FROM Customers c
+WHERE (
+    SELECT SUM(UnitPrice * Quantity)
+    FROM [Order Details] od
+    JOIN Orders o ON od.OrderID = o.OrderID
+    WHERE o.CustomerID = c.CustomerID
+) > (
+    SELECT AVG(total)
+    FROM (
+        SELECT SUM(UnitPrice * Quantity) AS total
+        FROM [Order Details] od2
+        JOIN Orders o2 ON od2.OrderID = o2.OrderID
+        GROUP BY o2.CustomerID
+    )
+);
+
+--5. List employees who handled orders shipped to Germany (subquery JOIN)
+SELECT DISTINCT e.FirstName || ' ' || e.LastName AS EmployeeName
+FROM Employees e
+JOIN (
+    SELECT EmployeeID
+    FROM Orders
+    WHERE ShipCountry = 'Germany')
+     AS GermanOrders ON e.EmployeeID = GermanOrders.EmployeeID;
+
+-- 6. Find the top 3 most expensive products (use subquery with ORDER BY and LIMIT)
+SELECT ProductName, UnitPrice
+FROM Products
+WHERE ProductID IN (
+    SELECT ProductID
+    FROM Products
+    ORDER BY UnitPrice DESC
+    LIMIT 3);
+
+
+
+ 
